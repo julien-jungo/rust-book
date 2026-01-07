@@ -821,3 +821,80 @@ let x = &mut p.x;
 
 println!("{}, {}", p.x, p.y);
 ```
+
+### 5.2 An Example Program Using Structs
+
+```rust
+#[derive(Debug)]
+struct Rectangle {
+  width: u32,
+  height: u32,
+}
+
+fn main() {
+  let rect1 = Rectangle {
+    width: 30,
+    height: 50,
+  };
+
+  println!("rect1 is {rect1:?}");
+
+  // rect1 is Rectangle { width: 30, height: 50 }
+
+  println!("rect1 is {rect1:#?}");
+
+  // rect1 is Rectangle {
+  //   width: 30,
+  //   height: 50,
+  // }
+
+  dbg!(&rect1);
+
+  // &rect1 = Rectangle {
+  //   width: 60,
+  //   height: 50,
+  // }
+}
+```
+
+### 5.3 Methods
+
+```rust
+#[derive(Debug)]
+struct Rectangle {
+  width: u32,
+  height: u32,
+}
+
+impl Rectangle {
+  fn area(&self) -> u32 {
+    self.width * self.height
+  }
+}
+
+fn main() {
+  let rect1 = Rectangle {
+    width: 30,
+    height: 50,
+  };
+
+  println!("The area of the rectangle is {} square pixels.", rect1.area());
+}
+```
+
+#### Associated Functions
+
+```rust
+impl Rectangle {
+  fn square(size: u32) -> Self {
+    Self {
+      width: size,
+      height: size,
+    }
+  }
+}
+
+fn main() {
+  let square = Rectangle::square(3);
+}
+```
