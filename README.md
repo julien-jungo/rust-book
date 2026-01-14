@@ -898,3 +898,127 @@ fn main() {
   let square = Rectangle::square(3);
 }
 ```
+
+## 6. Enums and Pattern Matching
+
+### 6.1 Defining an Enum
+
+```rust
+struct Ipv4Addr {
+  // ...
+}
+
+struct Ipv6Addr {
+  // ...
+}
+
+enum IpAddr {
+  V4(Ipv4Addr),
+  V6(Ipv6Addr)
+}
+```
+
+```rust
+enum Message {
+  Quit,
+  Write(String),
+  Move { x: i32, y: i32 },
+  ChangeColor(i32, i32, i32),
+}
+
+impl Message {
+  fn call(&self) {
+    // ...
+  }
+}
+
+fn main() {
+  let m = Message::Write(String::from("hello"));
+  m.call();
+}
+```
+
+#### The Option Enum
+
+```rust
+enum Option<T> {
+  None,
+  Some(T),
+}
+```
+
+### 6.3 The Match Control Flow Construct
+
+```rust
+enum Coin {
+  Penny,
+  Nickel,
+  Dime,
+  Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+  match coin {
+    Coin::Penny => 1,
+    Coin::Nickel => 5,
+    Coin::Dime => 10,
+    Coin::Quarter => 25,
+  }
+}
+```
+
+#### The Option Match Pattern
+
+```rust
+fn plus_one(x: Option<i32>) -> Option<i32> {
+  match x {
+    None => None,
+    Some(i) => Some(i + 1),
+  }
+}
+
+fn main() {
+  let five = plus_one(Some(4));
+  let none = plus_one(None);
+}
+```
+
+#### Catch-All Patterns
+
+```rust
+match dice_roll() {
+  1 => do_a(),
+  2 => do_b(),
+  _ => (),
+}
+```
+
+### 6.3 Consise Control Flow with if let and let else
+
+#### `if let`
+
+```rust
+let mut count = 0;
+
+if let Coin::Quarter(state) = coin {
+  println!("State quarter from {state:?}!");
+} else {
+  count += 1;
+}
+```
+
+#### `let else`
+
+```rust
+fn describe_state_quarter(coin: Coin) -> Option<String> {
+  let Coin::Quarter = coin else {
+    return None;
+  };
+
+  if state.existed_in(1900) {
+    Some(format!("{state:?} is pretty old."));
+  } else {
+    Some(format!("{state:?} is relatively new."));
+  }
+}
+```
