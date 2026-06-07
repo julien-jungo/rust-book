@@ -1022,3 +1022,198 @@ fn describe_state_quarter(coin: Coin) -> Option<String> {
   }
 }
 ```
+
+## 7. Packages, Crates and Modules
+
+### 7.1 Packages and Crates
+
+#### Create Package
+
+```shell
+cargo new my-project
+```
+
+```shell
+cargo new my-project --lib
+```
+
+### 7.2 Control Scope and Privacy with Modules
+
+#### Crate Root
+
+- `src/lib.rs` (library crate)
+- `src/main.rs` (binary crate)
+
+#### Modules
+
+```rust
+// main.rs
+mod garden; // in src/garden.rs or src/garden/mod.rs
+```
+
+#### Submodules
+
+```rust
+// src/garden.rs
+mod vegetables; // in src/garden/vegetables.rs or src/garden/vegetables/mod.rs
+```
+
+#### Example Structure
+
+```
+backyard
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── garden
+    │   └── vegetables.rs
+    ├── garden.rs
+    └── main.rs
+```
+
+#### Example Code
+
+```rust
+// main.rs
+use crate::garden::vegetables::Aspargus;
+
+pub mod garden; // includes src/garden.rs
+
+fn main() {
+    let plant = Aspargus {};
+}
+```
+
+```rust
+// src/garden.rs
+pub mod vegetables; // includes src/garden/vegetables.rs
+```
+
+```rust
+// src/garden/vegetables.rs
+#[derive(Debug)]
+pub struct Aspargus {}
+```
+
+### 7.3 Paths for Referring to an Item in the Module Tree
+
+```rust
+mod foo {
+    mod bar {
+        fn baz() {}
+    }
+}
+
+pub fn qux() {
+    crate::foo::bar::baz(); // absolute path
+    foo::bar::baz();        // relative path
+}
+```
+
+#### Starting Relative Paths with `super`
+
+```rust
+fn foo() {}
+
+mod bar {
+    fn baz() {
+        super::foo();
+    }
+}
+```
+
+#### Making Structs and Enums Public
+
+```rust
+pub struct Breakfast {
+    pub toast: String,  // public
+    fruit: String,      // private
+}
+```
+
+```rust
+pub enum Appetizer {
+    Soup,
+    Salad
+}
+```
+
+### 7.4 Bringing Paths into Scope with the `use` Keyword
+
+```rust
+mod foo {
+    pub mod bar {
+        pub fn baz() {}
+    }
+}
+
+use crate::foo::bar;
+
+pub fn qux() {
+    bar::baz();
+}
+```
+
+#### Providing New Names with the `as` Keyword
+
+```rust
+use std::fmt::Result as FmtResult;
+use std::io::Result as IoResult;
+```
+
+#### Re-Exporting with `pub use`
+
+```rust
+mod foo {
+    pub mod bar {
+        pub fn baz() {}
+    }
+}
+
+pub use crate::foo::bar;
+
+pub fn qux() {
+    bar::baz();
+}
+```
+
+#### Using External Packages
+
+```toml
+# Cargo.tml
+rand = "0.8.5"
+```
+
+```rust
+use rand::Rng;
+
+fn main() {
+    let secret_number = rand::thread_rng().gen_range(1..=100)
+}
+```
+
+#### Using Nested Paths to Clean Up `use` Lists
+
+```rust
+// from
+use std::cmp::Ordering;
+use std::io;
+
+// to
+use std::{cmp::Ordering, io};
+```
+
+```rust
+// from
+use std::io;
+use std::io::Write;
+
+// to
+use std::io::{self, Write};
+```
+
+#### Importing Items with the Glob Operator
+
+```rust
+use std::collections::*;
+```
