@@ -1217,3 +1217,205 @@ use std::io::{self, Write};
 ```rust
 use std::collections::*;
 ```
+
+## 8. Common Collections
+
+TODO
+
+## 9. Error Handling
+
+TODO
+
+## 10. Generic Types, Traits and Lifetimes
+
+TODO
+
+## 11. Writing Automated Tests
+
+TODO
+
+## 12. An I/O Project: Building a Command Line Program
+
+TODO
+
+## 13. Functional Language Features
+
+TODO
+
+## 14. More about Cargo and Crates.io
+
+TODO
+
+## 15. Smart Pointers
+
+### 15.1 Using `Box<T>` to Point to Data on the Heap
+
+#### Usages
+
+- When you have a type whose size can’t be known at compile time, and you want to use a value of that type in a context that requires an exact size
+- When you have a large amount of data, and you want to transfer ownership but ensure that the data won’t be copied when you do so
+- When you want to own a value, and you care only that it’s a type that implements a particular trait rather than being of a specific type
+
+#### Storing Data on the Heap
+
+```rust
+let b = Box::new(5);
+println!("b = {b}");
+```
+
+#### Enabling Recursive Types with Boxes
+
+```rust
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+```
+
+```rust
+let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))))
+```
+
+### 15.2 Treating Smart Pointers like Regular References
+
+#### Using `Box<T>` like a Reference
+
+```rust
+let x = 5;
+let y = Box::new(x);
+
+assert_eq!(5, x);
+assert_eq!(5, *y);
+```
+
+#### Implementing the `Deref` Trait
+
+```rust
+use std::ops::Deref;
+
+struct MyBox<T>(T);
+
+impl<T> MyBox<T> {
+    fn new(x: T) -> MyBox<T> {
+        MyBox(x)
+    }
+}
+
+impl<T> Deref for MyBox<T> {
+    type Target = T;
+    
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+```
+
+### 15.3 Running Code on Cleanup with the `Drop` Trait
+
+```rust
+struct CustomSmartPointer {
+    data: String
+}
+
+impl Drop for CustomSmartPointer {
+    fn drop(&mut self) {
+        println!("Dropping CustomSmartPointer with data `{}`", self.data)
+    }
+}
+```
+
+#### Automatic Cleanup
+
+```rust
+fn main() {
+    let ptr = CustomSmartPointer {
+        data: String::from("foo")
+    };
+}
+```
+
+#### Manual Cleanup
+
+```rust
+fn main() {
+    let ptr = CustomSmartPointer {
+        data: String::from("foo")
+    };
+    drop(ptr);
+}
+```
+
+### 15.4 `Rc<T>`, the Reference-Counted Smart Pointer
+
+```rust
+enum List {
+    Cons(i32, Rc<List>),
+    Nil,
+}
+
+fn main() {
+    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    let b = Cons(3, Rc::clone(&a));
+    let c = Cons(4, Rc::clone(&a));
+}
+```
+
+### 15.4 `RefCell<T>` and the Interior Mutability Pattern
+
+```rust
+#[derive(Debug)]
+enum List {
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil
+}
+```
+
+```rust
+let val = Rc::new(RefCell::new(5));
+
+let a = Rc::new(Cons(Rc::clone(&val), Rc::new(Nil)));
+
+let b = Cons(Rc::new(RefCell::new(3)), Rc::clone(&a));
+let c = Cons(Rc::new(RefCell::new(4)), Rc::clone(&a));
+
+*val.borrow_mut() += 10;
+
+println!("a after = {a:?}"); // a after = Cons(RefCell { value: 15 }, Nil)
+println!("b after = {b:?}"); // b after = Cons(RefCell { value: 3 }, Cons(RefCell { value: 15 }, Nil))
+println!("c after = {c:?}"); // c after = Cons(RefCell { value: 4 }, Cons(RefCell { value: 15 }, Nil))
+```
+
+### 15.5 Reference Cycles can Leak Memory
+
+#### Preventing Reference Cycles using `Weak<T>`
+
+```rust
+#[derive(Debug)]
+struct Node {
+    value: i32,
+    parent: RefCell<Weak<Node>>,
+    children: RefCell<Vec<Rc<Node>>>,
+}
+```
+
+```rust
+fn main() {
+    let leaf = Rc::new(Node {
+        value: 3,
+        parent: RefCell::new(Weak::new()),
+        children: RefCell::new(vec![]),
+    });
+
+    println!("leaf parent = {:?}", leaf.parent.borrow().upgrade());
+
+    let branch = Rc::new(Node {
+        value: 5,
+        parent: RefCell::new(Weak::new()),
+        children: RefCell::new(vec![Rc::clone(&leaf)]),
+    });
+
+    *leaf.parent.borrow_mut() = Rc::downgrade(&branch);
+
+    println!("leaf parent = {:?}", leaf.parent.borrow().upgrade());
+}
+```
