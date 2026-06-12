@@ -1360,7 +1360,7 @@ fn main() {
 }
 ```
 
-### 15.4 `RefCell<T>` and the Interior Mutability Pattern
+### 15.5 `RefCell<T>` and the Interior Mutability Pattern
 
 ```rust
 #[derive(Debug)]
@@ -1385,7 +1385,7 @@ println!("b after = {b:?}"); // b after = Cons(RefCell { value: 3 }, Cons(RefCel
 println!("c after = {c:?}"); // c after = Cons(RefCell { value: 4 }, Cons(RefCell { value: 15 }, Nil))
 ```
 
-### 15.5 Reference Cycles can Leak Memory
+### 15.6 Reference Cycles can Leak Memory
 
 #### Preventing Reference Cycles using `Weak<T>`
 
@@ -1417,5 +1417,44 @@ fn main() {
     *leaf.parent.borrow_mut() = Rc::downgrade(&branch);
 
     println!("leaf parent = {:?}", leaf.parent.borrow().upgrade());
+}
+```
+
+## 16. Fearless Concurrency
+
+### 16.1 Using Threads to Run Code Simultaneously
+
+```rust
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    let handle = thread::spawn(|| {
+        for i in 1..10 {
+            println!("hi number {i} from the spawned thread!");
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    for i in 1..5 {
+        println!("hi number {i} from the main thread!");
+        thread::sleep(Duration::from_millis(1));
+    }
+
+    handle.join().unwrap();
+}
+```
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(move || {
+        println!("Here's a vector: {v:?}");
+    });
+
+    handle.join().unwrap();
 }
 ```
