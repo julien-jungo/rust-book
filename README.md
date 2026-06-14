@@ -1744,65 +1744,6 @@ trpl::join!(fut1, fut2, fut3); // awaits arbitrary number of futures where numbe
 
 ### 17.3 Working With Any Number of Futures
 
-## 18. Object-Oriented Programming Features
-
-### 18.1 Characteristics of Object-Oriented Languages
-
-### 18.2 Using Trait Objects to Abstract over Shared Behavior
-
-#### Defining a Trait for Common Behavior
-
-```rust
-pub trait Draw {
-    fn draw(&self);
-}
-```
-
-```rust
-pub struct Screen {
-    pub components: Vec<Box<dyn Draw>>,
-}
-
-impl Screen {
-    pub fn run(&self) {
-        for component in self.components.iter() {
-            component.draw();
-        }
-    }
-}
-```
-
-```rust
-use gui::{Button, Screen};
-
-fn main() {
-    let screen = Screen {
-        components: vec![
-            Box::new(SelectBox {
-                width: 75,
-                height: 10,
-                options: vec![
-                    String::from("Yes"),
-                    String::from("Maybe"),
-                    String::from("No"),
-                ],
-            }),
-            Box::new(Button {
-                width: 50,
-                height: 10,
-                label: String::from("OK"),
-            }),
-        ],
-    };
-
-    screen.run();
-}
-```
-
-### 18.3 Implementing an Object-Oriented Design Pattern
-
-TODO
-
 #### Yielding Control to the Runtime
 
 ```rust
@@ -1962,7 +1903,62 @@ trpl::block_on(async {
 });
 ```
 
-## 18. Object Oriented Programming Features
+## 18. Object-Oriented Programming Features
+
+### 18.1 Characteristics of Object-Oriented Languages
+
+### 18.2 Using Trait Objects to Abstract over Shared Behavior
+
+#### Defining a Trait for Common Behavior
+
+```rust
+pub trait Draw {
+    fn draw(&self);
+}
+```
+
+```rust
+pub struct Screen {
+    pub components: Vec<Box<dyn Draw>>,
+}
+
+impl Screen {
+    pub fn run(&self) {
+        for component in self.components.iter() {
+            component.draw();
+        }
+    }
+}
+```
+
+```rust
+use gui::{Button, Screen};
+
+fn main() {
+    let screen = Screen {
+        components: vec![
+            Box::new(SelectBox {
+                width: 75,
+                height: 10,
+                options: vec![
+                    String::from("Yes"),
+                    String::from("Maybe"),
+                    String::from("No"),
+                ],
+            }),
+            Box::new(Button {
+                width: 50,
+                height: 10,
+                label: String::from("OK"),
+            }),
+        ],
+    };
+
+    screen.run();
+}
+```
+
+### 18.3 Implementing an Object-Oriented Design Pattern
 
 TODO
 
