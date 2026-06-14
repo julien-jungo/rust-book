@@ -1742,6 +1742,167 @@ trpl::join(tx_fut, rx_fut).await;
 trpl::join!(fut1, fut2, fut3); // awaits arbitrary number of futures where number is known at compile time
 ```
 
+### 17.3 Working With Any Number of Futures
+
+#### Yielding Control to the Runtime
+
+```rust
+let a = async {
+    println!("'a' started.");
+    slow("a", 30);
+    trpl::yield_now().await;
+    slow("a", 10);
+    trpl::yield_now().await;
+    slow("a", 20);
+    trpl::yield_now().await;
+    println!("'a' finished.");
+};
+
+let b = async {
+    println!("'b' started.");
+    slow("b", 75);
+    trpl::yield_now().await;
+    slow("b", 10);
+    trpl::yield_now().await;
+    slow("b", 15);
+    trpl::yield_now().await;
+    slow("b", 350);
+    trpl::yield_now().await;
+    println!("'b' finished.");
+};
+```
+
+#### Building Our Own Async Abstractions
+
+```rust
+async fn timeout<F: Future>(fut: F, max_time: Duration) -> Result<F::Output, Duration> {
+    match trpl::select(fut, trpl::sleep(max_time)).await {
+        Either::Left(out) => Ok(out),
+        Either::Right(_) => Err(max_time),
+    }
+}
+```
+
+```rust
+let slow = async {
+    trpl::sleep(Duration::from_secs(5)).await;
+    "Finally finished"
+};
+
+match timeout(slow, Duration::from_secs(2)).await {
+    Ok(message) => println!("Succeeded with '{message}'"),
+    Err(duration) => println!("Failed after {} seconds", duration.as_secs())
+}
+```
+
+### 17.4 Stream: Futures in Sequence
+
+```rust
+use trpl::StreamExt;
+
+fn main() {
+    trpl::block_on(async {
+        let vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let iter = vals.iter().map(|n| n * 2);
+        
+        let mut stream = trpl::stream_from_iter(iter);
+
+        while let Some(val) = stream.next().await {
+            println!("The value was: {val}");
+        }
+    }
+}
+```
+
+### 17.5 A Closer Look at the Traits for Async
+
+#### The `Future` Trait
+
+```rust
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+pub trait Future {
+    type Output;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
+}
+```
+
+```rust
+pub enum Poll<T> {
+    Ready(T),
+    Pending,
+}
+```
+
+#### The `Pin` Type and the `Unpin` Trait
+
+```rust
+let tx1_fut = pin!(async move {
+    // ...
+});
+
+let rx_fut = pin!(async {
+    // ...
+});
+
+let tx2_fut = pin!(async move {
+    // ...
+});
+
+let futures: Vec<Pin<&mut dyn Future<Output = ()>>> =
+    vec![tx1_fut, rx_fut, tx2_fut];
+```
+
+#### The `Stream` Trait
+
+```rust
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+trait Stream {
+    type Item;
+
+    fn poll_next(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>
+    ) -> Poll<Option<Self::Item>>;
+}
+```
+
+```rust
+trait StreamExt: Stream {
+    async fn next(&mut self) -> Option<Self::Item>
+    where
+        Self: Unpin;
+
+    // ...
+}
+```
+
+### 17.6 Putting it all Together: Futures, Tasks, and Threads
+
+- If the work is very parallelizable (that is, CPU-bound), such as processing a bunch of data where each part can be processed separately, threads are a better choice.
+- If the work is very concurrent (that is, I/O-bound), such as handling messages from a bunch of different sources that may come in at different intervals or different rates, async is a better choice.
+
+```rust
+let (tx, mut rx) = trpl::channel();
+
+thread::spawn(move || {
+    for i in 1..11 {
+        tx.send(i).unwrap();
+        thread::sleep(Duration::from_secs(1));
+    }
+});
+
+trpl::block_on(async {
+    while let Some(message) = rx.recv().await {
+        println!("{message}");
+    }
+});
+```
+
 ## 18. Object Oriented Programming Features
 
 TODO
