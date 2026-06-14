@@ -1236,7 +1236,7 @@ TODO
 
 ## 12. An I/O Project: Building a Command Line Program
 
-TODO
+[main.rs](minigrep/src/main.rs)
 
 ## 13. Functional Language Features
 
